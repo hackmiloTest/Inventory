@@ -22,7 +22,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> saveProduct(
 
-            @RequestParam("imageFile") MultipartFile imageFile,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam("name") String name,
             @RequestParam("sku") String sku,
             @RequestParam("price") BigDecimal price,

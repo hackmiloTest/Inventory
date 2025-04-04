@@ -4,43 +4,55 @@
   <!-- PRODUCT HEADER -->
   <div class="product-header">
     <h1>Products</h1>
-    <button class="add-product-btn" (click)="navigateToAddProductPage()">
-      Add Product
-    </button>
-  </div>
-
-  <!-- PRODUCT LIST -->
-  <div class="product-list" *ngIf="products.length > 0">
-    <div class="product-item" *ngFor="let product of products">
-      <img
-        [src]="product.imageUrl"
-        [alt]="product.name"
-        class="product-image"
-      />
-      <div class="product-info">
-        <h3 class="name">{{ product.name }}</h3>
-        <p class="sku">Sku: {{ product.sku }}</p>
-        <p class="sku">Price: {{ product.price }}</p>
-        <p class="sku">Stock Quantity: {{ product.stockQuantity }}</p>
-      </div>
-
-      <!-- PRODUCT ACTIONS -->
-      <div class="product-actions">
-        <button (click)="navigateToEditProductPage(product.id)" class="edt-btn">
-          Edit
-        </button>
-        <button (click)="handleProductDelete(product.id)" class="delete-btn">
-          Delete
-        </button>
-      </div>
+    <div class="search-add-container">
+      <input type="text" 
+             [(ngModel)]="searchTerm" 
+             (input)="onSearchChange()" 
+             placeholder="Search by name (min 3 chars)" 
+             class="search-input">
+      <button class="add-product-btn" (click)="navigateToAddProductPage()">
+        Add Product
+      </button>
     </div>
   </div>
 
-  <!-- PAGONATIOOPN COMPONETN IN USE -->
+  <!-- PRODUCT TABLE -->
+  <div class="product-table-container" *ngIf="products.length > 0">
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Bar-code</th>
+          <th>Price (K)</th>
+          <th>Stock</th>
+          <th>Size</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products" class="product-row">
+          <td>{{ product.name }}</td>
+          <td>{{ product.sku }}</td>
+          <td>{{ product.price }}</td>
+          <td>{{ product.stockQuantity }}</td>
+          <td>{{ product.description }}</td>
+          <td class="product-actions">
+            <button (click)="navigateToEditProductPage(product.id)" class="edit-btn">
+              Edit
+            </button>
+            <button (click)="handleProductDelete(product.id)" class="delete-btn">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION COMPONENT -->
   <app-pagination
     [currentPage]="currentPage"
     [totalPages]="totalPages"
-    (pageChange)="onPageChange($event)"
-  >
+    (pageChange)="onPageChange($event)">
   </app-pagination>
 </div>
