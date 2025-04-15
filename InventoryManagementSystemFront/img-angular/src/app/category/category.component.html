@@ -20,7 +20,7 @@
   <!-- DISPLAY THE CATEGORIES -->
   <ul *ngIf="categories.length > 0" class="category-list">
     <li *ngFor="let category of categories" class="category-item">
-      <span>{{ category.name }}</span>
+      <span>{{ category.name }} <small>(ID: {{ category.id }})</small></span>
       <div class="category-actions">
         <button (click)="handleEditCategory(category)">Edit</button>
         <button (click)="handleDeleteCategory(category.id)">Delete</button>

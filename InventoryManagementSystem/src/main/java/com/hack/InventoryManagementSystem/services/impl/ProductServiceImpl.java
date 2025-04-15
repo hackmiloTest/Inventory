@@ -10,6 +10,11 @@ import com.hack.InventoryManagementSystem.repository.ProductRepository;
 import com.hack.InventoryManagementSystem.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.data.domain.Sort;
@@ -18,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,47 +39,24 @@ public class ProductServiceImpl implements ProductService {
     private static final String IMAGE_DIRECTORY = System.getProperty("user.dir") + "/product-image/";
 
     @Override
-    public Response saveProduct(ProductDTO productDTO, MultipartFile imageFile) {
-        Category category = categoryRepository.findById(productDTO.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category Not Found"));
+    public Response saveProduct(ProductDTO productDTO) {
+        Category category = categoryRepository.findById(productDTO.getCategoryId()).orElseThrow(() -> new NotFoundException("Category Not Found"));
 
         //map out product dto to product entity
-        Product productToSave = Product.builder()
-                .name(productDTO.getName())
-                .sku(productDTO.getSku())
-                .price(productDTO.getPrice())
-                .stockQuantity(productDTO.getStockQuantity())
-                .description(productDTO.getDescription())
-                .category(category)
-                .build();
-
-        if (imageFile != null) {
-            String imagePath = saveImage(imageFile);
-            productToSave.setImageUrl(imagePath);
-        }
+        Product productToSave = Product.builder().name(productDTO.getName()).sku(productDTO.getSku()).price(productDTO.getPrice()).stockQuantity(productDTO.getStockQuantity()).description(productDTO.getDescription()).category(category).build();
 
         //save the product to our database
         productRepository.save(productToSave);
-        return Response.builder()
-                .status(200)
-                .message("Product Successfully Saved")
-                .build();
+        return Response.builder().status(200).message("Product Successfully Saved").build();
     }
 
     @Override
-    public Response updateProduct(ProductDTO productDTO, MultipartFile imageFile) {
-        Product existingProduct = productRepository.findById(productDTO.getProductId())
-                .orElseThrow(() -> new NotFoundException("Product Not Found"));
+    public Response updateProduct(ProductDTO productDTO) {
+        Product existingProduct = productRepository.findById(productDTO.getProductId()).orElseThrow(() -> new NotFoundException("Product Not Found"));
 
-        //Check if image is associated with the update request
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String imagePath = saveImage(imageFile);
-            existingProduct.setImageUrl(imagePath);
-        }
         //Check if category is to be changed for the product
         if (productDTO.getCategoryId() != null && productDTO.getCategoryId() > 0) {
-            Category category = categoryRepository.findById(productDTO.getCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Category Not Found"));
+            Category category = categoryRepository.findById(productDTO.getCategoryId()).orElseThrow(() -> new NotFoundException("Category Not Found"));
             existingProduct.setCategory(category);
         }
         //Check and update fields
@@ -99,10 +82,7 @@ public class ProductServiceImpl implements ProductService {
         //Update the product
 
         productRepository.save(existingProduct);
-        return Response.builder()
-                .status(200)
-                .message("Product Successfully Updated")
-                .build();
+        return Response.builder().status(200).message("Product Successfully Updated").build();
     }
 
     @Override
@@ -111,37 +91,25 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> productDTOS = modelMapper.map(products, new TypeToken<List<ProductDTO>>() {
         }.getType());
 
-        return Response.builder()
-                .status(200)
-                .message("success")
-                .products(productDTOS)
-                .build();
+        return Response.builder().status(200).message("success").products(productDTOS).build();
     }
 
     @Override
     public Response getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Product Not Found"));
+        Product product = productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product Not Found"));
 
-        return Response.builder()
-                .status(200)
-                .message("success")
-                .product(modelMapper.map(product, ProductDTO.class))
-                .build();
+        return Response.builder().status(200).message("success").product(modelMapper.map(product, ProductDTO.class)).build();
     }
 
     @Override
     public Response deleteProduct(Long id) {
-        productRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Product Not Found"));
+        productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product Not Found"));
 
         productRepository.deleteById(id);
 
-        return Response.builder()
-                .status(200)
-                .message("Product Success Deleted")
-                .build();
+        return Response.builder().status(200).message("Product Success Deleted").build();
     }
+
 
     private String saveImage(MultipartFile imageFile) {
         //validate check image
@@ -166,6 +134,94 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Error occurred while saving image" + ex.getMessage());
         }
         return imagePath;
+    }
+
+
+    @Override
+    public Response bulkSaveProducts(MultipartFile file) {
+        List<Product> productsToSave = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+
+        try {
+            // Leer el archivo Excel
+            Workbook workbook = new XSSFWorkbook(file.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0); // Suponemos que los datos están en la primera hoja
+
+            // Iterar sobre las filas del Excel (empezando desde la fila 1 para omitir los encabezados)
+            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+                Row row = sheet.getRow(i);
+                System.out.println("Procesando fila " + (i + 1) + ": " + row); // Debug
+                try {
+                    // Asegurarse de que la fila no esté vacía
+                    if (row == null) {
+                        System.out.println("Fila " + (i + 1) + " está vacía");
+                        continue;
+                    }
+
+                    ProductDTO dto = new ProductDTO();
+                    dto.setName(getCellValue(row.getCell(0)));
+                    dto.setSku((getCellValue(row.getCell(1))));
+                    dto.setPrice(new BigDecimal(getCellValue(row.getCell(2))));
+                    dto.setStockQuantity((int) Double.parseDouble(getCellValue(row.getCell(3))));
+                    dto.setDescription(getCellValue(row.getCell(4)));
+                    String categoryIdStr = getCellValue(row.getCell(5));
+                    dto.setCategoryId((long) Double.parseDouble(categoryIdStr));
+
+                    // Validaciones básicas
+                    if (dto.getName() == null || dto.getName().isBlank()) {
+                        throw new IllegalArgumentException("El nombre es requerido");
+                    }
+
+                    if (dto.getSku() == null || dto.getSku().isBlank()) {
+                        throw new IllegalArgumentException("El SKU es requerido");
+                    }
+
+                    Category category = categoryRepository.findById(dto.getCategoryId()).orElseThrow(() -> new NotFoundException("Categoría no encontrada para el producto: " + dto.getName()));
+
+                    // En tu servicio (antes del mapeo):
+                    modelMapper.getConfiguration().setAmbiguityIgnored(true); // Opcional: ignora conflictos
+                    modelMapper.typeMap(ProductDTO.class, Product.class).addMappings(mapper -> {
+                        mapper.<Long>map(ProductDTO::getCategoryId, (dest, v) -> dest.getCategory().setId(v));
+                    });
+
+// Luego usa el mapeo normal:
+                    Product product = modelMapper.map(dto, Product.class);
+
+                    productsToSave.add(product);
+                    successCount++;
+                } catch (Exception e) {
+                    System.out.println("Error en fila " + (i + 1) + ": " + e.getMessage());
+                    errors.add("Error en línea " + (i + 1) + ": " + e.getMessage());
+                }
+            }
+
+            if (!productsToSave.isEmpty()) {
+                productRepository.saveAll(productsToSave);
+            }
+
+        } catch (Exception e) {
+            errors.add("Error al procesar el archivo: " + e.getMessage());
+        }
+
+        return Response.builder().status(errors.isEmpty() ? 200 : 207) // 207 Multi-Status si hay errores
+                .message(successCount + " productos creados exitosamente").build();
+    }
+
+    private String getCellValue(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return "";
+        }
     }
 
 }

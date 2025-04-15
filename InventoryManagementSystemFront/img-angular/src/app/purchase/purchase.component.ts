@@ -11,34 +11,34 @@ import { ApiService } from '../service/api.service';
   styleUrl: './purchase.component.css'
 })
 export class PurchaseComponent implements OnInit {
-  constructor(private apiService: ApiService){}
+  constructor(private apiService: ApiService) { }
 
   products: any[] = []
   suppliers: any[] = []
-  productId:string = ''
-  supplierId:string = ''
-  description:string = ''
-  quantity:string = ''
-  message:string = ''
-  
+  productId: string = ''
+  supplierId: string = ''
+  description: string = ''
+  quantity: string = ''
+  message: string = ''
+  allProducts: any[] = [];
+  productSearchTerm: string = '';
+  filteredProducts: any[] = [];
+
 
   ngOnInit(): void {
     this.fetchProductsAndSuppliers();
   }
 
-  fetchProductsAndSuppliers():void{
+  fetchProductsAndSuppliers(): void {
     this.apiService.getAllProducts().subscribe({
       next: (res: any) => {
         if (res.status === 200) {
           this.products = res.products;
+          this.allProducts = [...res.products];
         }
       },
       error: (error) => {
-        this.showMessage(
-          error?.error?.message ||
-            error?.message ||
-            'Unable to get Products' + error
-        );
+        this.showMessage('Unable to get Products');
       },
     });
 
@@ -49,17 +49,35 @@ export class PurchaseComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.showMessage(
-          error?.error?.message ||
-            error?.message ||
-            'Unable to get suppliers' + error
-        );
+        this.showMessage('Unable to get suppliers');
       },
-    })
+    });
+  }
+
+  // Para búsqueda de productos por nombre o SKU
+  onProductSearch(): void {
+    if (this.productSearchTerm.length >= 2) {
+      const searchTerm = this.productSearchTerm.toLowerCase();
+      this.filteredProducts = this.allProducts
+        .filter(product =>
+          product.name.toLowerCase().includes(searchTerm) ||
+          product.sku.toString().toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 3);
+    } else {
+      this.filteredProducts = [];
+    }
+  }
+
+  // Para seleccionar producto de los resultados
+  selectProduct(product: any): void {
+    this.productId = product.id;
+    this.productSearchTerm = product.name;
+    this.filteredProducts = [];
   }
 
   //Handle form submission
-  handleSubmit():void{
+  handleSubmit(): void {
     if (!this.productId || !this.supplierId || !this.quantity) {
       this.showMessage("Please fill all fields")
       return;
@@ -67,7 +85,7 @@ export class PurchaseComponent implements OnInit {
     const body = {
       productId: this.productId,
       supplierId: this.supplierId,
-      quantity:  parseInt(this.quantity, 10),
+      quantity: parseInt(this.quantity, 10),
       description: this.description
     }
 
@@ -81,16 +99,16 @@ export class PurchaseComponent implements OnInit {
       error: (error) => {
         this.showMessage(
           error?.error?.message ||
-            error?.message ||
-            'Unable to get purchase a product' + error
+          error?.message ||
+          'Unable to get purchase a product' + error
         );
       },
     })
 
   }
 
-  
-  resetForm():void{
+
+  resetForm(): void {
     this.productId = '';
     this.supplierId = '';
     this.description = '';
@@ -98,7 +116,7 @@ export class PurchaseComponent implements OnInit {
   }
 
 
-  
+
 
 
 

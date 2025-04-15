@@ -4,6 +4,15 @@
   <!-- TRANSCATIONS HEADER -->
   <div class="transactions-header">
     <h1>Transactions</h1>
+    <div class="transaction-filters">
+      <button [class.active]="selectedType === 'SALE_NO_RETURN'" (click)="filterByType('SALE_NO_RETURN')">
+        Ventas sin Devolución
+      </button>      
+      <button [class.active]="selectedType === ''" (click)="filterByType('')">Todos</button>
+      <button [class.active]="selectedType === 'SALE'" (click)="filterByType('SALE')">Ventas</button>
+      <button [class.active]="selectedType === 'PURCHASE'" (click)="filterByType('PURCHASE')">Compras</button>
+      <button [class.active]="selectedType === 'RETURN'" (click)="filterByType('RETURN')">Devoluciones</button>
+    </div>    
     <div class="transaction-search">
       <input
         type="text"
@@ -19,27 +28,47 @@
     <table class="transactions-table">
       <thead>
         <tr>
-          <th>TYPE</th>
-          <th>STATUS</th>
-          <th>TOTAL PRICE</th>
-          <th>TOTAL PRODUCTS</th>
-          <th>DATE</th>
-          <th>ACTIONS</th>
+          <th>NOMBRE</th>
+          <th>TALLAS</th>
+          <th>CODIGO DE BARRAS</th>
+          <th>TIPO</th>
+          <th>ESTADO</th>
+          <th>VALOR</th>
+          <th>CANTIDAD</th>
+          <th>FECHA</th>
+          <th>ACCIONES</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr *ngFor="let transaction of transactions">
+        <tr *ngFor="let transaction of transactions"
+            [ngClass]="{
+              'sale-row': transaction.transactionType === 'SALE',
+              'purchase-row': transaction.transactionType === 'PURCHASE',
+              'return-row': transaction.transactionType === 'RETURN'
+            }">
+          <td>{{ transaction.product?.name }}</td>
+          <td>{{ transaction.product?.description }}</td>
+          <td>{{ transaction.product?.sku }}</td>
           <td>{{ transaction.transactionType }}</td>
           <td>{{ transaction.status }}</td>
           <td>{{ transaction.totalPrice }}</td>
           <td>{{ transaction.totalProducts }}</td>
-          <td>{{ transaction.createdAt | date : "short" }}</td>
-          <td (click)="navigateTOTransactionsDetailsPage(transaction.id)">
-            <button>View Details</button>
+          <td>{{ transaction.createdAt | date : 'short' }}</td>
+          <td>
+            <div class="action-buttons">
+              <button (click)="navigateTOTransactionsDetailsPage(transaction.id)">
+                View Details
+              </button>
+              <button 
+                *ngIf="transaction.transactionType === 'SALE'" 
+                (click)="handleReturn(transaction)">
+                Devolver
+              </button>
+            </div>
           </td>
         </tr>
-      </tbody>
+      </tbody>      
     </table>
   </div>
 

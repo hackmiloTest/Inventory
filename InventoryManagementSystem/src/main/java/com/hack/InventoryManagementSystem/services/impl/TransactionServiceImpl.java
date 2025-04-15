@@ -157,7 +157,6 @@ public class TransactionServiceImpl implements TransactionService {
                 }.getType());
         transactionDTOS.forEach(transactionDTOItem -> {
             transactionDTOItem.setUser(null);
-            transactionDTOItem.setProduct(null);
             transactionDTOItem.setSupplier(null);
         });
         return Response.builder()
@@ -216,4 +215,43 @@ public class TransactionServiceImpl implements TransactionService {
                 .message("Transaction Status Successfully Updated")
                 .build();
     }
+
+    public Response returnSaleTransaction(TransactionsRequest transactionsRequest, Long originalSaleId) {
+        Transaction originalSale = transactionRepository.findById(originalSaleId)
+                .orElseThrow(() -> new NotFoundException("Original Sale Transaction not found"));
+
+        Product product = originalSale.getProduct();
+        Supplier supplier = transactionsRequest.getSupplierId() != null
+                ? supplierRepository.findById(transactionsRequest.getSupplierId())
+                .orElseThrow(() -> new NotFoundException("Supplier not found"))
+                : null;
+
+        User user = userService.getCurrentLoggedInUser();
+        Integer quantity = originalSale.getTotalProducts();
+
+        // Devolver el producto al inventario
+        product.setStockQuantity(product.getStockQuantity() + quantity);
+        productRepository.save(product);
+
+        // Crear transacción de tipo RETURN
+        Transaction returnTransaction = Transaction.builder()
+                .transactionType(TransactionType.RETURN)
+                .status(TransactionStatus.COMPLETED)
+                .product(product)
+                .user(user)
+                .supplier(supplier)
+                .totalProducts(quantity)
+                .totalPrice(originalSale.getTotalPrice().negate()) // Opcional: mostrar valor negativo si quieres
+                .description("Devolución de venta ID " + originalSaleId)
+                .originalSaleId(originalSaleId)
+                .build();
+
+        transactionRepository.save(returnTransaction);
+
+        return Response.builder()
+                .status(200)
+                .message("Venta devuelta exitosamente")
+                .build();
+    }
+
 }

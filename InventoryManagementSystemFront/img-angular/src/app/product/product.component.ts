@@ -52,7 +52,8 @@ export class ProductComponent implements OnInit {
     if (this.searchTerm.length >= 3) {
       const searchTermLower = this.searchTerm.toLowerCase();
       filteredProducts = filteredProducts.filter(product =>
-        product.name.toLowerCase().includes(searchTermLower)
+        product.name.toLowerCase().includes(searchTermLower) || 
+      product.sku.toString().toLowerCase().includes(searchTermLower)
       );
     }
 
@@ -81,8 +82,8 @@ export class ProductComponent implements OnInit {
 private sortProductsBySkuAscending(products: any[]): any[] {
   return products.sort((a, b) => {
     // Convertir a string para comparación segura
-    const skuA = String(a.sku).toLowerCase();
-    const skuB = String(b.sku).toLowerCase();
+    const skuA = String(a.name).toLowerCase();
+    const skuB = String(b.name).toLowerCase();
     
     if (skuA < skuB) return -1;
     if (skuA > skuB) return 1;
@@ -125,6 +126,10 @@ private sortProductsBySkuAscending(products: any[]): any[] {
   //NAVIGATE TO EDIT PRODUCT PAGE
   navigateToEditProductPage(productId: string): void {
     this.router.navigate([`/edit-product/${productId}`]);
+  }
+
+  navigateToBulkUploadPage(): void {
+    this.router.navigate(['/products/bulk-upload']);
   }
 
   //SHOW ERROR

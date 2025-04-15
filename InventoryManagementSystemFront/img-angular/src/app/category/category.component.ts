@@ -5,7 +5,7 @@ import { ApiService } from '../service/api.service';
 
 interface Category {
   id: string,
-  name:string
+  name: string
 }
 
 
@@ -20,47 +20,52 @@ interface Category {
 export class CategoryComponent implements OnInit {
 
   categories: Category[] = [];
-  categoryName:string = '';
+  categoryName: string = '';
   message: string = '';
-  isEditing:boolean = false;
-  editingCategoryId:string | null = null;
+  isEditing: boolean = false;
+  editingCategoryId: string | null = null;
 
-  constructor(private apiService: ApiService){}
+  constructor(private apiService: ApiService) { }
 
   ngOnInit(): void {
     this.getCategories();
   }
 
+
   //GET ALL CATEGORIES
-  getCategories():void{
+  getCategories(): void {
     this.apiService.getAllCategory().subscribe({
-      next:(res:any) =>{
+      next: (res: any) => {
         if (res.status === 200) {
           this.categories = res.categories;
+  
+          // Ordenar alfabéticamente por nombre
+          this.categories.sort((a, b) => a.name.localeCompare(b.name));
         }
       },
-      error:(error) =>{
-        this.showMessage(error?.error?.message || error?.message || "Unable to get all categories" + error)
+      error: (error) => {
+        this.showMessage(error?.error?.message || error?.message || "Unable to get all categories" + error);
       }
     })
   }
+  
 
 
   //ADD A NEW CATEGORY
-  addCategory():void{
+  addCategory(): void {
     if (!this.categoryName) {
       this.showMessage("Category name is required");
       return;
     }
-    this.apiService.createCategory({name:this.categoryName}).subscribe({
-      next:(res:any) =>{
+    this.apiService.createCategory({ name: this.categoryName }).subscribe({
+      next: (res: any) => {
         if (res.status === 200) {
           this.showMessage("Category added successfully")
           this.categoryName = '';
           this.getCategories();
         }
       },
-      error:(error) =>{
+      error: (error) => {
         this.showMessage(error?.error?.message || error?.message || "Unable to save category" + error)
       }
     })
@@ -71,12 +76,12 @@ export class CategoryComponent implements OnInit {
 
 
   // EDIT CATEGORY
-  editCategory():void{
+  editCategory(): void {
     if (!this.editingCategoryId || !this.categoryName) {
       return;
     }
-    this.apiService.updateCategory(this.editingCategoryId, {name:this.categoryName}).subscribe({
-      next:(res:any) =>{
+    this.apiService.updateCategory(this.editingCategoryId, { name: this.categoryName }).subscribe({
+      next: (res: any) => {
         if (res.status === 200) {
           this.showMessage("Category updated successfully")
           this.categoryName = '';
@@ -84,30 +89,30 @@ export class CategoryComponent implements OnInit {
           this.getCategories();
         }
       },
-      error:(error) =>{
+      error: (error) => {
         this.showMessage(error?.error?.message || error?.message || "Unable to edit category" + error)
       }
     })
   }
 
   //set the category to edit
-  handleEditCategory(category:Category):void{
+  handleEditCategory(category: Category): void {
     this.isEditing = true;
     this.editingCategoryId = category.id;
     this.categoryName = category.name
   }
 
   //Delete a caetgory
-  handleDeleteCategory(caetgoryId: string):void{
+  handleDeleteCategory(caetgoryId: string): void {
     if (window.confirm("Are you sure you want to delete this categoy?")) {
       this.apiService.deleteCategory(caetgoryId).subscribe({
-        next:(res:any) =>{
+        next: (res: any) => {
           if (res.status === 200) {
             this.showMessage("Category deleted successfully")
             this.getCategories(); //reload the category
           }
         },
-        error:(error) =>{
+        error: (error) => {
           this.showMessage(error?.error?.message || error?.message || "Unable to Delete category" + error)
         }
       })
@@ -121,9 +126,9 @@ export class CategoryComponent implements OnInit {
 
 
 
-  showMessage(message:string){
+  showMessage(message: string) {
     this.message = message;
-    setTimeout(() =>{
+    setTimeout(() => {
       this.message = ''
     }, 4000)
   }

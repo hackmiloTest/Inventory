@@ -3,7 +3,9 @@ package com.hack.InventoryManagementSystem.controller;
 import com.hack.InventoryManagementSystem.dto.ProductDTO;
 import com.hack.InventoryManagementSystem.dto.Response;
 import com.hack.InventoryManagementSystem.services.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +20,7 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping("/add")
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> saveProduct(
 
@@ -38,7 +40,7 @@ public class ProductController {
         productDTO.setCategoryId(categoryId);
         productDTO.setDescription(description);
 
-        return ResponseEntity.ok(productService.saveProduct(productDTO, imageFile));
+        return ResponseEntity.ok(productService.saveProduct(productDTO));
     }
 
     @GetMapping("/all")
@@ -53,34 +55,19 @@ public class ProductController {
 
     @PutMapping("/update")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Response> updateProduct(
-
-            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-            @RequestParam(value = "name", required = false) String name,
-            @RequestParam(value = "sku", required = false) String sku,
-            @RequestParam(value = "price", required = false) BigDecimal price,
-            @RequestParam(value = "stockQuantity", required = false) Integer stockQuantity,
-            @RequestParam(value = "productId", required = true) Long productId,
-            @RequestParam(value = "categoryId", required = false) Long categoryId,
-            @RequestParam(value = "description", required = false) String description) {
-
-        ProductDTO productDTO = new ProductDTO();
-
-        productDTO.setName(name);
-        productDTO.setSku(sku);
-        productDTO.setPrice(price);
-        productDTO.setStockQuantity(stockQuantity);
-        productDTO.setProductId(productId);
-        productDTO.setCategoryId(categoryId);
-        productDTO.setDescription(description);
-
-        return ResponseEntity.ok(productService.updateProduct(productDTO, imageFile));
+    public ResponseEntity<Response> updateProduct(@RequestBody @Valid ProductDTO productDTO) {
+        return ResponseEntity.ok(productService.updateProduct(productDTO));
     }
 
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> deleteProduct(@PathVariable Long id) {
         return ResponseEntity.ok(productService.deleteProduct(id));
+    }
+
+    @PostMapping("/bulk-excel")
+    public ResponseEntity<Response> createProductsBulk(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(productService.bulkSaveProducts(file));
     }
 
 }

@@ -42,4 +42,6 @@ public class TransactionDTO {
     private UserDTO user;
 
     private SupplierDTO supplier;
+    private Long originalSaleId;
+
 }

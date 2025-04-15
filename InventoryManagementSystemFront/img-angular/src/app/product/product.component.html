@@ -5,16 +5,21 @@
   <div class="product-header">
     <h1>Products</h1>
     <div class="search-add-container">
-      <input type="text" 
-             [(ngModel)]="searchTerm" 
-             (input)="onSearchChange()" 
-             placeholder="Search by name (min 3 chars)" 
-             class="search-input">
+      <input type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Search by name (min 3 chars)"
+        class="search-input">
+
+      <!-- Botón de carga masiva -->
+      <button class="bulk-upload-btn" (click)="navigateToBulkUploadPage()">
+        Bulk Upload
+      </button>
+
       <button class="add-product-btn" (click)="navigateToAddProductPage()">
         Add Product
       </button>
     </div>
   </div>
+
+  <!-- ... (resto del código se mantiene igual) ... -->
 
   <!-- PRODUCT TABLE -->
   <div class="product-table-container" *ngIf="products.length > 0">
@@ -50,9 +55,6 @@
   </div>
 
   <!-- PAGINATION COMPONENT -->
-  <app-pagination
-    [currentPage]="currentPage"
-    [totalPages]="totalPages"
-    (pageChange)="onPageChange($event)">
+  <app-pagination [currentPage]="currentPage" [totalPages]="totalPages" (pageChange)="onPageChange($event)">
   </app-pagination>
 </div>

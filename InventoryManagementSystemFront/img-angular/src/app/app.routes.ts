@@ -13,6 +13,7 @@ import { TransactionComponent } from './transaction/transaction.component';
 import { TransactionDetailsComponent } from './transaction-details/transaction-details.component';
 import { ProfileComponent } from './profile/profile.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { ProductBulkUploadComponent } from './product-bulk-upload/product-bulk-upload.component';
 
 export const routes: Routes = [
 
@@ -28,6 +29,7 @@ export const routes: Routes = [
   { path: 'product', component: ProductComponent, canActivate:[GuardService], data: {requiresAdmin: true} },
   { path: 'edit-product/:productId', component: AddEditProductComponent, canActivate:[GuardService], data: {requiresAdmin: true} },
   { path: 'add-product', component: AddEditProductComponent, canActivate:[GuardService], data: {requiresAdmin: true} },
+  { path: 'products/bulk-upload', component: ProductBulkUploadComponent },
 
 
   { path: 'purchase', component: PurchaseComponent, canActivate:[GuardService] },

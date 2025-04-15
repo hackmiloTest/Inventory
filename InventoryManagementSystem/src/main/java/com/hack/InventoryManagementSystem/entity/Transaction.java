@@ -39,6 +39,9 @@ public class Transaction {
 
     private final LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "original_sale_id")
+    private Long originalSaleId; // 🆕
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -62,6 +65,7 @@ public class Transaction {
                 ", description='" + description + '\'' +
                 ", updatedAt=" + updatedAt +
                 ", createdAt=" + createdAt +
+                ", originalSaleId=" + originalSaleId +
                 '}';
     }
 }

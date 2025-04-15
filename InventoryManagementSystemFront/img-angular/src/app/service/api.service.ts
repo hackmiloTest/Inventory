@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpEventType, HttpHeaders } from '@angular/common/http';
+import { catchError, map, Observable, throwError } from 'rxjs';
 import CryptoJS from "crypto-js";
 
 
@@ -17,29 +17,29 @@ export class ApiService {
   private static ENCRYPTION_KEY = "phegon-dev-inventory";
 
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-    // Encrypt data and save to localStorage
-    encryptAndSaveToStorage(key: string, value: string): void {
-      const encryptedValue = CryptoJS.AES.encrypt(value, ApiService.ENCRYPTION_KEY).toString();
-      localStorage.setItem(key, encryptedValue);
-    }
-  
-    // Retreive from localStorage and Decrypt
-    private getFromStorageAndDecrypt(key: string): any {
-      try {
-        const encryptedValue = localStorage.getItem(key);
-        if (!encryptedValue) return null;
-        return CryptoJS.AES.decrypt(encryptedValue, ApiService.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
-      } catch (error) {
-        return null;
-      }
-    }
+  // Encrypt data and save to localStorage
+  encryptAndSaveToStorage(key: string, value: string): void {
+    const encryptedValue = CryptoJS.AES.encrypt(value, ApiService.ENCRYPTION_KEY).toString();
+    localStorage.setItem(key, encryptedValue);
+  }
 
-    
+  // Retreive from localStorage and Decrypt
+  private getFromStorageAndDecrypt(key: string): any {
+    try {
+      const encryptedValue = localStorage.getItem(key);
+      if (!encryptedValue) return null;
+      return CryptoJS.AES.decrypt(encryptedValue, ApiService.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      return null;
+    }
+  }
+
+
   private clearAuth() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("role");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
   }
 
 
@@ -53,7 +53,18 @@ export class ApiService {
 
 
 
-
+  private handleError(error: HttpErrorResponse) {
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      console.error('Error:', error.error.message);
+    } else {
+      // Error del lado del servidor
+      console.error(
+        `Código de error: ${error.status}, ` +
+        `Mensaje: ${error.error.message || error.message}`);
+    }
+    return throwError(() => new Error('Ocurrió un error; por favor inténtalo de nuevo más tarde.'));
+  }
 
 
 
@@ -193,6 +204,28 @@ export class ApiService {
     });
   }
 
+  bulkUploadExcel(file: FormData): Observable<any> {
+    return this.http.post(`${ApiService.BASE_URL}/products/bulk-excel`, file, {
+      headers: this.getHeader(),
+      reportProgress: true,
+      observe: 'events'
+    }).pipe(
+      map(event => this.getUploadProgress(event)),
+      catchError(this.handleError)
+    );
+  }
+  
+  private getUploadProgress(event: any): any {
+    if (event.type === HttpEventType.UploadProgress) {
+      const progress = Math.round(100 * event.loaded / event.total);
+      return { status: 'progress', progress };
+    }
+    if (event.type === HttpEventType.Response) {
+      return event.body;
+    }
+    return event;
+  }
+
 
 
 
@@ -231,7 +264,7 @@ export class ApiService {
     });
   }
 
-  
+
   updateTransactionStatus(id: string, status: string): Observable<any> {
     return this.http.put(`${ApiService.BASE_URL}/transactions/update/${id}`, JSON.stringify(status), {
       headers: this.getHeader().set("Content-Type", "application/json")
@@ -249,6 +282,15 @@ export class ApiService {
     });
   }
 
+  returnSale(saleId: string, body: any): Observable<any> {
+    return this.http.post(
+      `${ApiService.BASE_URL}/transactions/return-sale/${saleId}`,
+      body,
+      { headers: this.getHeader() }
+    );
+  }
+  
+  
 
 
 
@@ -260,18 +302,19 @@ export class ApiService {
 
 
 
-/**AUTHENTICATION CHECKER */
-    
-  logout():void{
+
+  /**AUTHENTICATION CHECKER */
+
+  logout(): void {
     this.clearAuth()
   }
 
-  isAuthenticated():boolean{
+  isAuthenticated(): boolean {
     const token = this.getFromStorageAndDecrypt("token");
     return !!token;
   }
 
-  isAdmin():boolean {
+  isAdmin(): boolean {
     const role = this.getFromStorageAndDecrypt("role");
     return role === "ADMIN";
   }

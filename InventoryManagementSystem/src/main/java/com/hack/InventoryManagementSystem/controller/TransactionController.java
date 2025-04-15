@@ -61,5 +61,13 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.updateTransactions(transactionId, status));
     }
 
+    @PostMapping("/return-sale/{saleId}")
+    public ResponseEntity<Response> returnSale(
+            @PathVariable Long saleId,
+            @RequestBody TransactionsRequest request) {
+        return ResponseEntity.ok(transactionService.returnSaleTransaction(request, saleId));
+    }
+
+
 
 }

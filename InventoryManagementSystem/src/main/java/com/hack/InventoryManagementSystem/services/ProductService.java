@@ -5,13 +5,15 @@ import com.hack.InventoryManagementSystem.dto.Response;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductService {
-    Response saveProduct(ProductDTO productDTO, MultipartFile imageFile);
+    Response saveProduct(ProductDTO productDTO);
 
-    Response updateProduct(ProductDTO productDTO, MultipartFile imageFile);
+    Response updateProduct(ProductDTO productDTO);
 
     Response getAllProducts();
 
     Response getProductById(Long id);
 
     Response deleteProduct(Long id);
+
+    Response bulkSaveProducts(MultipartFile file);
 }
