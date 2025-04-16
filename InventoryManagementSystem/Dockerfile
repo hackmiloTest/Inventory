@@ -1,14 +1,14 @@
-# Usa una imagen base de Java
-FROM eclipse-temurin:17-jdk
+# Imagen base con Java 21
+FROM eclipse-temurin:21-jdk
 
-# Define el directorio de trabajo dentro del contenedor
+# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copia el archivo JAR compilado al contenedor
-COPY target/*.jar app.jar
+# Copia el archivo JAR generado por Maven al contenedor
+COPY target/InventoryManagementSystem-0.0.1-SNAPSHOT.jar app.jar
 
-# Expón el puerto (Render lo reemplaza con $PORT)
+# Exponer el puerto (Render usará $PORT)
 EXPOSE 8080
 
-# Comando para ejecutar la app
+# Comando para ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
